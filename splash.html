@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-app-region: drag;
+            user-select: none;
+        }
+
+        .splash {
+            width: 440px;
+            height: 320px;
+            background: linear-gradient(145deg, #0d1117, #111827, #0d1117);
+            border-radius: 24px;
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            box-shadow:
+                0 24px 80px rgba(0, 0, 0, 0.7),
+                0 0 60px rgba(99, 102, 241, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background glow */
+        .splash::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg at 50% 50%,
+                    transparent 0deg,
+                    rgba(99, 102, 241, 0.06) 90deg,
+                    transparent 180deg,
+                    rgba(139, 92, 246, 0.06) 270deg,
+                    transparent 360deg);
+            animation: rotate 6s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .splash-content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Shield icon */
+        .logo-icon {
+            width: 64px;
+            height: 64px;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-icon svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .app-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #818cf8, #a78bfa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .app-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        /* Loading bar */
+        .loader-container {
+            width: 200px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .loader-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa);
+            border-radius: 4px;
+            animation: load 2.5s ease-in-out forwards;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+        }
+
+        @keyframes load {
+            0% {
+                width: 0%;
+            }
+
+            30% {
+                width: 35%;
+            }
+
+            60% {
+                width: 65%;
+            }
+
+            80% {
+                width: 85%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+
+        .loader-text {
+            font-size: 0.65rem;
+            color: #4b5563;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            animation: pulse-text 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-text {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Version */
+        .version {
+            position: absolute;
+            bottom: 14px;
+            right: 18px;
+            font-size: 0.6rem;
+            color: #374151;
+            z-index: 2;
+        }
+
+        /* Fade out */
+        .splash.fade-out {
+            animation: fadeOut 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="splash" id="splash">
+        <div class="splash-content">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#6366f1" />
+                            <stop offset="100%" style="stop-color:#a78bfa" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="url(#grad)" stroke-width="1.5"
+                        fill="none" />
+                    <path d="M9 12l2 2 4-4" stroke="url(#grad)" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+            </div>
+            <div class="app-title">DRAFT OS</div>
+            <div class="app-subtitle">Hard Fearless System</div>
+            <div class="loader-container">
+                <div class="loader-bar"></div>
+            </div>
+            <div class="loader-text">데이터 로딩 중...</div>
+        </div>
+        <div class="version">v1.0.0</div>
+    </div>
+</body>
+
+</html>

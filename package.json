@@ -1,0 +1,51 @@
+{
+  "name": "draft-os",
+  "version": "1.0.0",
+  "description": "Hard Fearless Draft OS — 스크림 데이터 기반 BO3/BO5 밴픽 운영 시스템",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir"
+  },
+  "author": "Draft OS Team",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.3.1",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.draftos.app",
+    "productName": "Draft OS",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "splash.html",
+      "style.css",
+      "js/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Draft OS"
+    }
+  }
+}
