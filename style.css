@@ -198,10 +198,9 @@ a {
 }
 
 .view.active {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  display: block;
   overflow-y: auto;
+  height: 100%;
 }
 
 /* --- Buttons --- */
@@ -492,13 +491,14 @@ select option {
 
 /* Draft Side (Ban/Pick) */
 .draft-side {
-  width: 200px;
+  width: 130px;
   flex-shrink: 0;
-  padding: 12px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   border-right: 1px solid var(--border);
+  overflow: visible;
 }
 
 .draft-red {
@@ -544,7 +544,25 @@ select option {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
+}
+
+.slot-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.slot-label {
+  font-size: 0.55rem;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-height: 12px;
 }
 
 /* --- Side Header (Label + Ban Icons) --- */
@@ -1677,8 +1695,6 @@ select option {
    ============================================================ */
 .team-page {
   padding: 0 24px 24px;
-  overflow-y: auto;
-  height: 100%;
 }
 
 .team-profile-card h3 {
@@ -1879,8 +1895,6 @@ select option {
    ============================================================ */
 .scouting-page {
   padding: 0 24px 24px;
-  overflow-y: auto;
-  height: 100%;
 }
 
 .scouting-layout {

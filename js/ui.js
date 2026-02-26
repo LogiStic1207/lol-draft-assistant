@@ -200,7 +200,10 @@ const DraftUI = (() => {
   function _buildSlots(count, prefix) {
     let html = '';
     for (let i = 0; i < count; i++) {
-      html += `<div class="draft-slot" id="${prefix}-${i}"><div class="slot-placeholder">${i + 1}</div></div>`;
+      html += `<div class="slot-wrapper">
+        <div class="draft-slot" id="${prefix}-${i}"><div class="slot-placeholder">${i + 1}</div></div>
+        <span class="slot-label" id="${prefix}-name-${i}"></span>
+      </div>`;
     }
     return html;
   }
@@ -428,41 +431,61 @@ const DraftUI = (() => {
   function _showLaneAssignment() {
     const state = DraftEngine.getState();
     if (!state) return;
-    const ourPicks = state.ourSide === 'blue' ? state.bluePicks : state.redPicks;
+    const bluePicks = state.bluePicks;
+    const redPicks = state.redPicks;
     const list = document.getElementById('lane-assign-list');
     if (!list) return;
     const lanes = ['TOP', 'JG', 'MID', 'BOT', 'SUP'];
-    list.innerHTML = ourPicks.map((cid, i) => {
-      const c = CHAMPION_MAP[cid];
-      if (!c) return '';
+    const blueLabel = state.ourSide === 'blue' ? '🔵 우리 팀 (블루)' : '🔵 상대 팀 (블루)';
+    const redLabel = state.ourSide === 'red' ? '🔴 우리 팀 (레드)' : '🔴 상대 팀 (레드)';
+
+    function renderTeam(picks, label, prefix) {
       return `
-        <div class="lane-assign-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-          <img src="${c.image}" style="width:36px;height:36px;border-radius:50%" />
-          <strong style="flex:1">${c.name}</strong>
-          <select class="lane-select" data-index="${i}" style="padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary)">
-            ${lanes.map(l => `<option value="${l}" ${l === (c.roles[0] || 'MID') ? 'selected' : ''}>${l}</option>`).join('')}
-          </select>
-        </div>
+        <h4 style="margin:12px 0 8px;color:var(--text-secondary)">${label}</h4>
+        ${picks.map((cid, i) => {
+        const c = CHAMPION_MAP[cid];
+        if (!c) return '';
+        return `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <img src="${c.image}" style="width:36px;height:36px;border-radius:50%" />
+              <strong style="flex:1">${c.name}</strong>
+              <select class="lane-select" data-prefix="${prefix}" data-index="${i}" style="padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary)">
+                ${lanes.map(l => `<option value="${l}" ${l === (c.roles[0] || 'MID') ? 'selected' : ''}>${l}</option>`).join('')}
+              </select>
+            </div>
+          `;
+      }).join('')}
       `;
-    }).join('');
+    }
+
+    list.innerHTML = renderTeam(bluePicks, blueLabel, 'blue') + renderTeam(redPicks, redLabel, 'red');
     document.getElementById('modal-lane-assign')?.classList.remove('hidden');
   }
 
   function _confirmLaneAssignment() {
     const state = DraftEngine.getState();
     if (!state) return;
-    const selects = document.querySelectorAll('.lane-select');
-    const assignments = {};
-    const ourPicks = state.ourSide === 'blue' ? state.bluePicks : state.redPicks;
-    selects.forEach(sel => {
+    const blueAssign = {};
+    const redAssign = {};
+    document.querySelectorAll('.lane-select').forEach(sel => {
+      const prefix = sel.dataset.prefix;
       const idx = parseInt(sel.dataset.index);
-      const champId = ourPicks[idx];
-      if (champId) assignments[champId] = sel.value;
+      const picks = prefix === 'blue' ? state.bluePicks : state.redPicks;
+      const champId = picks[idx];
+      if (champId) {
+        if (prefix === 'blue') blueAssign[champId] = sel.value;
+        else redAssign[champId] = sel.value;
+      }
     });
-    // Store on draft state
-    state.laneAssignments = assignments;
+    // Assign based on which side is ours
+    if (state.ourSide === 'blue') {
+      state.laneAssignments = blueAssign;
+      state.enemyLaneAssignments = redAssign;
+    } else {
+      state.laneAssignments = redAssign;
+      state.enemyLaneAssignments = blueAssign;
+    }
     document.getElementById('modal-lane-assign')?.classList.add('hidden');
-    // Now enable finish button
     _refreshAll();
   }
 
@@ -559,22 +582,23 @@ const DraftUI = (() => {
   function _updateSlots(prefix, champs, type) {
     for (let i = 0; i < 5; i++) {
       const slot = document.getElementById(`${prefix}-${i}`);
+      const nameLabel = document.getElementById(`${prefix}-name-${i}`);
       if (!slot) continue;
       if (i < champs.length) {
         const c = CHAMPION_MAP[champs[i]];
         if (c) {
-          // Meta badge
           const metaLabel = (typeof MetaAnalyzer !== 'undefined') ? MetaAnalyzer.getMetaLabel(c.id) : '';
           slot.innerHTML = `
             <img src="${c.image}" alt="${c.name}" class="slot-img" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23333%22 width=%2248%22 height=%2248%22/></svg>'" />
-            <span class="slot-name">${c.name}</span>
             ${metaLabel ? `<span class="slot-meta">${metaLabel}</span>` : ''}
           `;
           slot.classList.add('filled');
+          if (nameLabel) nameLabel.textContent = c.name;
         }
       } else {
         slot.innerHTML = `<div class="slot-placeholder">${i + 1}</div>`;
         slot.classList.remove('filled');
+        if (nameLabel) nameLabel.textContent = '';
       }
     }
   }
