@@ -187,8 +187,8 @@ a {
 
 .main-content {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  position: relative;
   height: 100%;
 }
 
@@ -200,7 +200,11 @@ a {
 .view.active {
   display: block;
   overflow-y: auto;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* --- Buttons --- */
@@ -586,8 +590,8 @@ select option {
 }
 
 .ban-icon-slot {
-  width: 32px;
-  height: 32px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
@@ -611,7 +615,7 @@ select option {
 }
 
 .ban-icon-num {
-  font-size: 0.6rem;
+  font-size: 0.45rem;
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -630,7 +634,7 @@ select option {
   left: 50%;
   transform: translate(-50%, -50%);
   color: var(--red-side);
-  font-size: 1.1rem;
+  font-size: 0.7rem;
   font-weight: 900;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
   pointer-events: none;
@@ -1411,7 +1415,7 @@ select option {
   flex: 1;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  grid-template-columns: repeat(19, 1fr);
   gap: 4px;
   padding: 8px;
   align-content: start;
