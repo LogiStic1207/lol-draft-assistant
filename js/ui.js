@@ -87,35 +87,30 @@ const DraftUI = (() => {
           </div>
         </div>
 
-        <!-- (C) Decision Assistant -->
+        <!-- (C) Decision Assistant — All panels merged -->
         <div class="decision-assistant" id="decision-assistant">
-          <div class="assist-tabs">
-            <button class="assist-tab active" data-tab="recs">추천</button>
-            <button class="assist-tab" data-tab="predict">상대 예측</button>
-            <button class="assist-tab" data-tab="comp">컴프 분석</button>
-          </div>
           <div class="assist-panel" id="assist-recs">
             <div class="assist-section" id="ban-recs">
               <h4>🚫 밴 추천</h4>
               <div class="rec-list" id="ban-rec-list"></div>
             </div>
             <div class="assist-section" id="pick-recs-sig">
-              <h4>🌟 시그니처 픽</h4>
+              <h4>🌟 픽 추천</h4>
               <div class="rec-list" id="pick-sig-list"></div>
             </div>
             <div class="assist-section" id="pick-recs-safe">
               <h4>🛡️ 안전 선픽</h4>
               <div class="rec-list" id="pick-safe-list"></div>
             </div>
-          </div>
-          <div class="assist-panel hidden" id="assist-predict">
-            <h4>🔮 상대 다음 픽 예측</h4>
-            <div class="rec-list" id="predict-list"></div>
-          </div>
-          <div class="assist-panel hidden" id="assist-comp">
-            <h4>📊 컴프 레이더</h4>
-            <canvas id="comp-radar-canvas" width="200" height="200"></canvas>
-            <div id="comp-warnings"></div>
+            <div class="assist-section" id="predict-section">
+              <h4>🔮 상대 예측 픽</h4>
+              <div class="rec-list" id="predict-list"></div>
+            </div>
+            <div class="assist-section" id="comp-section">
+              <h4>📊 컴프 분석</h4>
+              <canvas id="comp-radar-canvas" width="200" height="200"></canvas>
+              <div id="comp-warnings"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -318,16 +313,6 @@ const DraftUI = (() => {
     document.getElementById('champ-search')?.addEventListener('input', (e) => {
       _searchQuery = e.target.value.toLowerCase();
       _renderChampionGrid();
-    });
-
-    // Assist tabs
-    document.querySelectorAll('.assist-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.assist-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.assist-panel').forEach(p => p.classList.add('hidden'));
-        tab.classList.add('active');
-        document.getElementById('assist-' + tab.dataset.tab)?.classList.remove('hidden');
-      });
     });
 
     _renderChampionGrid();
@@ -749,8 +734,10 @@ const DraftUI = (() => {
     const sigList = document.getElementById('pick-sig-list');
     if (sigList) {
       if (isPickPhase && isOurTurn) {
-        sigList.innerHTML = picks.signature.map(p => `
-          <div class="rec-card sig-card" onclick="DraftUI.onChampClick('${p.champion.id}')">
+        // Combined: signature + general picks sorted by score (top 5)
+        const combined = picks.all.slice(0, 5);
+        sigList.innerHTML = combined.map(p => `
+          <div class="rec-card ${p.type === 'SIGNATURE' ? 'sig-card' : 'pick-card'}" onclick="DraftUI.onChampClick('${p.champion.id}')">
             <img src="${p.champion.image}" class="rec-img" onerror="this.style.display='none'" />
             <div class="rec-info">
               <strong>${p.champion.name}</strong>
@@ -758,30 +745,39 @@ const DraftUI = (() => {
               <div class="rec-reasons">${p.reasons.map(r => `<span class="reason">${r}</span>`).join('')}</div>
             </div>
           </div>
-        `).join('') || '<div class="empty-rec">시그니처 없음 — Team DNA에서 등록</div>';
+        `).join('') || '<div class="empty-rec">추천 데이터 없음 — Team DNA에서 등록</div>';
       } else if (isPickPhase && !isOurTurn) {
         sigList.innerHTML = '<div class="empty-rec">상대 픽 턴 — 대기 중</div>';
       } else {
         sigList.innerHTML = '<div class="empty-rec">밴 페이즈 진행 중</div>';
       }
     }
+
+    // Safe first pick: visible only when our side is blue
+    const safeSection = document.getElementById('pick-recs-safe');
     const safeList = document.getElementById('pick-safe-list');
-    if (safeList) {
-      if (isBlueFirstPick && isOurTurn) {
-        safeList.innerHTML = picks.safe.slice(0, 3).map(p => `
-          <div class="rec-card safe-card" onclick="DraftUI.onChampClick('${p.champion.id}')">
-            <img src="${p.champion.image}" class="rec-img" onerror="this.style.display='none'" />
-            <div class="rec-info">
-              <strong>${p.champion.name}</strong>
-              <span class="rec-score">${(p.score * 100).toFixed(0)}점</span>
-              <div class="rec-reasons">${p.reasons.map(r => `<span class="reason">${r}</span>`).join('')}</div>
+    if (safeSection && safeList) {
+      if (state.ourSide === 'blue') {
+        safeSection.style.display = '';
+        if (isBlueFirstPick && isOurTurn) {
+          safeList.innerHTML = picks.safe.slice(0, 3).map(p => `
+            <div class="rec-card safe-card" onclick="DraftUI.onChampClick('${p.champion.id}')">
+              <img src="${p.champion.image}" class="rec-img" onerror="this.style.display='none'" />
+              <div class="rec-info">
+                <strong>${p.champion.name}</strong>
+                <span class="rec-score">${(p.score * 100).toFixed(0)}점</span>
+                <div class="rec-reasons">${p.reasons.map(r => `<span class="reason">${r}</span>`).join('')}</div>
+              </div>
             </div>
-          </div>
-        `).join('');
-      } else if (isPickPhase) {
-        safeList.innerHTML = '<div class="empty-rec">안전 선픽은 블루 1픽에서만 표시</div>';
+          `).join('') || '<div class="empty-rec">안전 선픽 없음</div>';
+        } else if (isPickPhase) {
+          safeList.innerHTML = '<div class="empty-rec">블루 1픽 타이밍에 표시</div>';
+        } else {
+          safeList.innerHTML = '<div class="empty-rec">밴 페이즈 진행 중</div>';
+        }
       } else {
-        safeList.innerHTML = '<div class="empty-rec">밴 페이즈 진행 중</div>';
+        // Red side: hide safe first pick section
+        safeSection.style.display = 'none';
       }
     }
 
