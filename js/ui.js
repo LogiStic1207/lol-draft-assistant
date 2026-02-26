@@ -194,60 +194,6 @@ const DraftUI = (() => {
         </div>
       </div>
 
-      <!-- Series Complete Modal -->
-      <div class="modal-overlay hidden" id="modal-series-complete">
-        <div class="modal series-complete-modal">
-          <div class="series-complete-icon">🏆</div>
-          <h3>시리즈 완료!</h3>
-          <p id="series-complete-summary" class="series-complete-summary"></p>
-          <div class="modal-actions">
-            <button class="btn btn-accent" id="modal-series-ok">확인</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Meta Modal -->
-      <div class="modal-overlay hidden" id="modal-meta">
-        <div class="modal modal-wide">
-          <h3>🔧 패치 메타 정보</h3>
-          <div class="meta-modal-content" id="meta-modal-content">
-            <p>패치 데이터를 불러오는 중...</p>
-          </div>
-          <div class="modal-actions">
-            <button class="btn" id="modal-meta-close">닫기</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Settings Modal -->
-      <div class="modal-overlay hidden" id="modal-settings">
-        <div class="modal modal-wide">
-          <h3>⚙️ 설정</h3>
-          <div class="settings-content">
-            <div class="settings-section">
-              <h4>데이터 관리</h4>
-              <button class="btn btn-danger" id="btn-reset-data">🗑️ 전체 데이터 초기화</button>
-              <p class="settings-hint">모든 팀 정보, 선수 데이터, 경기 기록이 삭제됩니다.</p>
-            </div>
-            <div class="settings-section">
-              <h4>버그 리포트</h4>
-              <div class="form-group">
-                <label>제목</label>
-                <input type="text" id="bug-title" placeholder="버그 제목" />
-              </div>
-              <div class="form-group">
-                <label>내용</label>
-                <textarea id="bug-description" rows="4" placeholder="버그 상세 설명..."></textarea>
-              </div>
-              <button class="btn btn-accent" id="btn-submit-bug">📨 버그 제출</button>
-              <p id="bug-submit-status" class="settings-hint"></p>
-            </div>
-          </div>
-          <div class="modal-actions">
-            <button class="btn" id="modal-settings-close">닫기</button>
-          </div>
-        </div>
-      </div>
     `;
   }
 
@@ -287,17 +233,11 @@ const DraftUI = (() => {
       _refreshAll();
     });
 
-    // Meta Modal
+    // Meta Modal (triggers local function)
     document.getElementById('btn-meta-modal')?.addEventListener('click', _showMetaModal);
-    document.getElementById('modal-meta-close')?.addEventListener('click', () => _hideModal('modal-meta'));
 
-    // Settings Modal
-    document.getElementById('btn-settings')?.addEventListener('click', () => {
-      document.getElementById('modal-settings')?.classList.remove('hidden');
-    });
-    document.getElementById('modal-settings-close')?.addEventListener('click', () => _hideModal('modal-settings'));
-    document.getElementById('btn-reset-data')?.addEventListener('click', _resetAllData);
-    document.getElementById('btn-submit-bug')?.addEventListener('click', _submitBugReport);
+    // Lane Assignment
+    document.getElementById('btn-lane-confirm')?.addEventListener('click', _confirmLaneAssignment);
 
     // Role filters
     document.querySelectorAll('.role-btn').forEach(btn => {
@@ -485,26 +425,45 @@ const DraftUI = (() => {
     document.getElementById('modal-meta')?.classList.remove('hidden');
   }
 
-  function _resetAllData() {
-    if (!confirm('⚠️ 모든 데이터가 삭제됩니다. 계속하시겠습니까?')) return;
-    localStorage.clear();
-    alert('데이터가 초기화되었습니다.');
-    location.reload();
+  function _showLaneAssignment() {
+    const state = DraftEngine.getState();
+    if (!state) return;
+    const ourPicks = state.ourSide === 'blue' ? state.bluePicks : state.redPicks;
+    const list = document.getElementById('lane-assign-list');
+    if (!list) return;
+    const lanes = ['TOP', 'JG', 'MID', 'BOT', 'SUP'];
+    list.innerHTML = ourPicks.map((cid, i) => {
+      const c = CHAMPION_MAP[cid];
+      if (!c) return '';
+      return `
+        <div class="lane-assign-row" style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <img src="${c.image}" style="width:36px;height:36px;border-radius:50%" />
+          <strong style="flex:1">${c.name}</strong>
+          <select class="lane-select" data-index="${i}" style="padding:4px 8px;background:var(--bg-primary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-primary)">
+            ${lanes.map(l => `<option value="${l}" ${l === (c.roles[0] || 'MID') ? 'selected' : ''}>${l}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }).join('');
+    document.getElementById('modal-lane-assign')?.classList.remove('hidden');
   }
 
-  function _submitBugReport() {
-    const title = document.getElementById('bug-title')?.value || '';
-    const desc = document.getElementById('bug-description')?.value || '';
-    if (!title || !desc) {
-      document.getElementById('bug-submit-status').textContent = '⚠️ 제목과 내용을 모두 입력해주세요.';
-      return;
-    }
-    const subject = encodeURIComponent(`[Draft OS Bug] ${title}`);
-    const body = encodeURIComponent(`${desc}\n\n---\nApp: Draft OS\nPatch: ${DDRAGON_VERSION}\nDate: ${new Date().toISOString()}`);
-    window.open(`mailto:tinyrexx1207@gmail.com?subject=${subject}&body=${body}`);
-    document.getElementById('bug-submit-status').textContent = '✅ 제출 완료! 메일 클라이언트를 확인해주세요.';
-    document.getElementById('bug-title').value = '';
-    document.getElementById('bug-description').value = '';
+  function _confirmLaneAssignment() {
+    const state = DraftEngine.getState();
+    if (!state) return;
+    const selects = document.querySelectorAll('.lane-select');
+    const assignments = {};
+    const ourPicks = state.ourSide === 'blue' ? state.bluePicks : state.redPicks;
+    selects.forEach(sel => {
+      const idx = parseInt(sel.dataset.index);
+      const champId = ourPicks[idx];
+      if (champId) assignments[champId] = sel.value;
+    });
+    // Store on draft state
+    state.laneAssignments = assignments;
+    document.getElementById('modal-lane-assign')?.classList.add('hidden');
+    // Now enable finish button
+    _refreshAll();
   }
 
   function _refreshAll() {
@@ -516,8 +475,14 @@ const DraftUI = (() => {
 
     const state = DraftEngine.getState();
     const finishBtn = document.getElementById('btn-finish-game');
-    // Disable if no state, game not complete, or series already finished
-    if (finishBtn) finishBtn.disabled = !state?.isComplete || state?.isSeriesComplete;
+    // Disable if no state, game not complete, series already finished, or lane not assigned yet
+    const lanesDone = state?.laneAssignments && Object.keys(state.laneAssignments).length > 0;
+    if (finishBtn) finishBtn.disabled = !state?.isComplete || state?.isSeriesComplete || (state?.isComplete && !lanesDone);
+
+    // Auto-show lane assignment when draft completes
+    if (state?.isComplete && !state?.isSeriesComplete && !state?.laneAssignments) {
+      _showLaneAssignment();
+    }
   }
 
   function _updateSeriesTracker() {

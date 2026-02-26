@@ -195,11 +195,13 @@ a {
 .view {
   display: none;
   padding: 0;
-  min-height: 100%;
 }
 
 .view.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
 }
 
 /* --- Buttons --- */
@@ -395,7 +397,8 @@ select option {
 .draft-room {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 /* Series Tracker */
@@ -482,6 +485,11 @@ select option {
   overflow: hidden;
 }
 
+/* Override for champion grid to scroll */
+.draft-center {
+  overflow-y: auto !important;
+}
+
 /* Draft Side (Ban/Pick) */
 .draft-side {
   width: 200px;
@@ -526,11 +534,17 @@ select option {
   color: var(--red-side);
 }
 
-.ban-slots,
-.pick-slots {
+.ban-slots {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.pick-slots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 /* --- Side Header (Label + Ban Icons) --- */
@@ -604,28 +618,20 @@ select option {
   pointer-events: none;
 }
 
-/* Slot Meta Badge */
-.slot-meta {
-  font-size: 0.55rem;
-  position: absolute;
-  bottom: 1px;
-  right: 2px;
-  opacity: 0.8;
-}
-
-/* --- Pick Slot (full-size) --- */
+/* --- Pick Slot (circular like real LoL draft) --- */
 .draft-slot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: var(--radius);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid transparent;
-  min-height: 40px;
-  transition: var(--transition);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(75, 85, 99, 0.4);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .draft-slot.pending {
@@ -650,18 +656,18 @@ select option {
 
 /* Filled pick slot glow */
 .draft-slot.filled {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .draft-blue .draft-slot.filled {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.25), inset 0 0 20px rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1);
   animation: slot-glow-blue 2s ease-in-out infinite;
 }
 
 .draft-red .draft-slot.filled {
-  border-color: rgba(239, 68, 68, 0.5);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.25), inset 0 0 20px rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.3), inset 0 0 20px rgba(239, 68, 68, 0.1);
   animation: slot-glow-red 2s ease-in-out infinite;
 }
 
@@ -670,12 +676,12 @@ select option {
   0%,
   100% {
     box-shadow: 0 0 8px rgba(59, 130, 246, 0.2), inset 0 0 15px rgba(59, 130, 246, 0.05);
-    border-color: rgba(59, 130, 246, 0.4);
+    border-color: rgba(59, 130, 246, 0.5);
   }
 
   50% {
-    box-shadow: 0 0 18px rgba(59, 130, 246, 0.4), inset 0 0 25px rgba(59, 130, 246, 0.1);
-    border-color: rgba(59, 130, 246, 0.7);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.45), inset 0 0 25px rgba(59, 130, 246, 0.12);
+    border-color: rgba(59, 130, 246, 0.8);
   }
 }
 
@@ -684,34 +690,47 @@ select option {
   0%,
   100% {
     box-shadow: 0 0 8px rgba(239, 68, 68, 0.2), inset 0 0 15px rgba(239, 68, 68, 0.05);
-    border-color: rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 0.5);
   }
 
   50% {
-    box-shadow: 0 0 18px rgba(239, 68, 68, 0.4), inset 0 0 25px rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.45), inset 0 0 25px rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.8);
   }
 }
 
 .slot-placeholder {
   color: var(--text-muted);
-  font-size: 0.75rem;
-  width: 100%;
+  font-size: 0.7rem;
   text-align: center;
 }
 
 .slot-img {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 .slot-name {
-  font-size: 0.75rem;
-  font-weight: 500;
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.55rem;
+  font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.slot-meta {
+  font-size: 0.5rem;
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  opacity: 0.9;
+  z-index: 1;
 }
 
 /* ============================================================
